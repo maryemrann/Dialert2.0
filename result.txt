@@ -1,0 +1,18 @@
+{
+  "patient_name": "Maryam",
+  "gender": "Male",
+  "age": 21,
+  "hypertension": 0,
+  "heart_disease": 0,
+  "smoking_status": "never smoked",
+  "bmi": 25,
+  "hba1c": 5.8,
+  "glucose": 120,
+  "prediction": 0,
+  "probability": 5.13,
+  "risk_level": "Non-Diabetic",
+  "recommendations": [
+    "No diabetes detected. Keep up a healthy lifestyle!",
+    "Prediabetic HbA1c range. Take preventive steps now."
+  ]
+}

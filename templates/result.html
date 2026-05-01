@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DiAlert - Diagnostic Results</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0a0f1c; color: white; min-height: 100vh; }
+
+    nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 40px; height: 64px;
+      background: #001a22; border-bottom: 1px solid #00ffff22;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .nav-brand { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+    .nav-brand img { height: 40px; width: 40px; object-fit: contain; filter: drop-shadow(0 0 6px cyan); }
+    .nav-brand-text { font-size: 22px; font-weight: 700; color: white; }
+    .nav-brand-text span { color: cyan; }
+    .nav-links { display: flex; gap: 30px; }
+    .nav-links a { color: #aaa; text-decoration: none; font-size: 15px; transition: color .2s; }
+    .nav-links a:hover { color: cyan; }
+    .nav-right { display: flex; gap: 14px; align-items: center; }
+    .btn-new {
+      background: transparent; color: cyan; border: 2px solid cyan;
+      padding: 8px 22px; border-radius: 50px; font-size: 14px; font-weight: 700;
+      text-decoration: none; transition: background .2s;
+    }
+    .btn-new:hover { background: #00ffff18; }
+
+    .page-header { text-align: center; padding: 40px 20px 24px; }
+    .page-header h1 { font-size: 36px; font-weight: 800; }
+    .page-header h1 span { color: cyan; text-shadow: 0 0 12px cyan; }
+
+    .container { max-width: 1000px; margin: 0 auto 60px; padding: 0 20px; display: flex; flex-direction: column; gap: 24px; }
+
+    /* Result card */
+    .result-card {
+      background: linear-gradient(135deg, #04202a, #002b36);
+      border: 1px solid #00ffff33; border-radius: 20px;
+      padding: 32px; display: flex; gap: 40px;
+      align-items: center; flex-wrap: wrap;
+    }
+
+    .circle-wrap { display: flex; flex-direction: column; align-items: center; gap: 14px; flex-shrink: 0; }
+    .circle {
+      width: 160px; height: 160px; border-radius: 50%;
+      border: 6px solid cyan; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      box-shadow: 0 0 30px #00ffff66;
+      transition: border-color .4s, box-shadow .4s;
+    }
+    .circle .pct { font-size: 42px; font-weight: 800; }
+    .circle .sub { font-size: 12px; color: #aacccc; margin-top: 2px; }
+    .risk-badge {
+      padding: 6px 20px; border-radius: 50px; font-size: 14px;
+      font-weight: 700; letter-spacing: 1px;
+    }
+
+    .result-info { flex: 1; min-width: 220px; }
+    .result-info h2 { font-size: 28px; font-weight: 800; margin-bottom: 10px; }
+    .result-info .label { color: #aacccc; font-size: 14px; }
+    .result-info .name { color: cyan; font-size: 22px; font-weight: 700; text-shadow: 0 0 8px cyan; }
+
+    .bar-wrap { margin-top: 18px; }
+    .bar-bg { height: 10px; background: #001822; border-radius: 10px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 10px; width: 0; transition: width 1s ease; }
+
+    /* Info grid */
+    .info-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 14px;
+    }
+    .info-box {
+      background: #003844cc; border: 1px solid #00ffff22; border-radius: 14px;
+      padding: 14px 18px; display: flex; flex-direction: column; gap: 4px;
+      transition: box-shadow .2s;
+    }
+    .info-box:hover { box-shadow: 0 0 18px #00ffff33; }
+    .info-box .lbl { font-size: 12px; color: #778899; font-weight: 600; letter-spacing: .5px; }
+    .info-box .val { font-size: 17px; font-weight: 700; color: white; text-shadow: 0 0 6px #00ffff66; }
+
+    /* Recs */
+    .recs-card {
+      background: linear-gradient(135deg, #04202a, #002b36);
+      border: 1px solid #00ffff22; border-radius: 20px; padding: 28px 32px;
+    }
+    .recs-card h3 { font-size: 20px; color: cyan; text-shadow: 0 0 8px cyan; margin-bottom: 18px; }
+    .rec-item {
+      display: flex; gap: 12px; align-items: flex-start;
+      padding: 12px 0; border-bottom: 1px solid #00ffff0d;
+      font-size: 15px; color: #cce6e6; line-height: 1.5;
+    }
+    .rec-item:last-child { border-bottom: none; }
+    .rec-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+
+    /* DB save badge */
+    .db-badge {
+      background: #002b1a; border: 1px solid #00ff8844; border-radius: 12px;
+      padding: 12px 20px; color: #00ff88; font-size: 14px; font-weight: 600;
+      display: flex; align-items: center; gap: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-brand" href="/">
+    <img src="/logo" alt="DiAlert Logo" />
+    <div class="nav-brand-text">Di<span>Alert</span></div>
+  </a>
+  <div class="nav-links">
+    <a href="/">Home</a>
+    <a href="/scan">Start Scan</a>
+  </div>
+  <div class="nav-right">
+    <a href="/scan" class="btn-new">+ New Scan</a>
+  </div>
+</nav>
+
+<div class="page-header">
+  <h1>Diagnostic <span>Results</span></h1>
+</div>
+
+<div class="container">
+
+  <!-- Main Result -->
+  <div class="result-card">
+    <div class="circle-wrap">
+      <div class="circle" id="circle">
+        <div class="pct" id="pct">--%</div>
+        <div class="sub">Risk Score</div>
+      </div>
+      <div class="risk-badge" id="riskBadge">Loading...</div>
+    </div>
+    <div class="result-info">
+      <div class="label">PATIENT</div>
+      <div class="name" id="patientName">—</div>
+      <h2 id="riskLevel" style="margin-top:12px">—</h2>
+      <div class="bar-wrap">
+        <div style="display:flex;justify-content:space-between;font-size:13px;color:#778899;margin-bottom:6px">
+          <span>Low Risk</span><span>High Risk</span>
+        </div>
+        <div class="bar-bg"><div class="bar-fill" id="barFill"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DB save indicator -->
+  <div class="db-badge">
+    💾 &nbsp;Patient data saved to <code>dialert_patients.db</code>
+  </div>
+
+  <!-- Patient Info Grid -->
+  <div class="info-grid" id="infoGrid"></div>
+
+  <!-- Recommendations -->
+  <div class="recs-card">
+    <h3>📋 Personalized Recommendations</h3>
+    <div id="recsList"></div>
+  </div>
+
+</div>
+
+<script>
+  const icons = {
+    default: '✅',
+    diabetic: '⚠️',
+    bp: '💊',
+    heart: '❤️',
+    bmi: '🏃',
+    glucose: '🩸',
+    hba1c: '🔬',
+    consult: '🩺',
+    diet: '🥗',
+    exercise: '🏋️',
+    monitor: '📊',
+  };
+
+  function recIcon(text) {
+    const t = text.toLowerCase();
+    if (t.includes('diabetes detected')) return '⚠️';
+    if (t.includes('consult')) return '🩺';
+    if (t.includes('diet') || t.includes('sugar') || t.includes('fiber')) return '🥗';
+    if (t.includes('exercise')) return '🏋️';
+    if (t.includes('monitor') || t.includes('glucose')) return '📊';
+    if (t.includes('blood pressure') || t.includes('salt')) return '💊';
+    if (t.includes('heart') || t.includes('cardio')) return '❤️';
+    if (t.includes('weight') || t.includes('bmi') || t.includes('nutrition')) return '🏃';
+    if (t.includes('hba1c')) return '🔬';
+    return '✅';
+  }
+
+  fetch('/result-data')
+    .then(r => r.json())
+    .then(d => {
+      const isDiabetic = d.prediction === 1;
+      const prob = d.probability !== undefined ? d.probability : (isDiabetic ? 100 : 0);
+      const color = isDiabetic ? '#ff4d4d' : '#00e676';
+      const gradColor = isDiabetic ? '#3a0000' : '#00260e';
+
+      // Circle
+      document.getElementById('pct').textContent = prob.toFixed(1) + '%';
+      const circle = document.getElementById('circle');
+      circle.style.borderColor = color;
+      circle.style.boxShadow = `0 0 30px ${color}88`;
+
+      // Badge
+      const badge = document.getElementById('riskBadge');
+      badge.textContent = isDiabetic ? '⚠ HIGH RISK' : '✓ LOW RISK';
+      badge.style.background = gradColor;
+      badge.style.color = color;
+      badge.style.border = `1px solid ${color}`;
+
+      // Risk level
+      document.getElementById('riskLevel').textContent = d.risk_level;
+      document.getElementById('riskLevel').style.color = color;
+
+      // Patient name
+      document.getElementById('patientName').textContent = d.patient_name || 'Anonymous';
+
+      // Bar
+      setTimeout(() => {
+        const bar = document.getElementById('barFill');
+        bar.style.width = prob + '%';
+        bar.style.background = `linear-gradient(90deg, #00e676, ${isDiabetic ? '#ff4d4d' : '#00e676'})`;
+      }, 200);
+
+      // Info grid
+      const fields = [
+        ['⚧ Gender', d.gender],
+        ['📅 Age', d.age + ' years'],
+        ['🩺 Hypertension', d.hypertension === 1 ? 'Yes' : 'No'],
+        ['❤️ Heart Disease', d.heart_disease === 1 ? 'Yes' : 'No'],
+        ['🚬 Smoking', (d.smoking_status || '').replace('_', ' ')],
+        ['🧍 BMI', d.bmi + ' kg/m²'],
+        ['🔬 HbA1c', d.hba1c + ' %'],
+        ['💧 Blood Glucose', d.glucose + ' mg/dL'],
+      ];
+      const grid = document.getElementById('infoGrid');
+      fields.forEach(([lbl, val]) => {
+        grid.innerHTML += `<div class="info-box"><div class="lbl">${lbl}</div><div class="val">${val}</div></div>`;
+      });
+
+      // Recommendations
+      const recList = document.getElementById('recsList');
+      (d.recommendations || []).forEach(rec => {
+        recList.innerHTML += `
+          <div class="rec-item">
+            <span class="rec-icon">${recIcon(rec)}</span>
+            <span>${rec}</span>
+          </div>`;
+      });
+    })
+    .catch(() => {
+      document.body.innerHTML += '<div style="color:#ff8888;text-align:center;padding:60px;font-size:18px">⚠️ Could not load results. Please run a scan first.</div>';
+    });
+</script>
+
+</body>
+</html>

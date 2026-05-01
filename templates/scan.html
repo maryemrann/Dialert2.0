@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DiAlert - Patient Scan</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #0a0f1c; color: white; min-height: 100vh;
+    }
+
+    nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 40px; height: 64px;
+      background: #001a22; border-bottom: 1px solid #00ffff22;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .nav-brand { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+    .nav-brand img { height: 40px; width: 40px; object-fit: contain; filter: drop-shadow(0 0 6px cyan); }
+    .nav-brand-text { font-size: 22px; font-weight: 700; color: white; }
+    .nav-brand-text span { color: cyan; }
+    .nav-links { display: flex; gap: 30px; }
+    .nav-links a { color: #aaa; text-decoration: none; font-size: 15px; transition: color .2s; }
+    .nav-links a:hover, .nav-links a.active { color: cyan; }
+    .nav-badge { background: #003844; color: cyan; border: 1px solid cyan; border-radius: 20px; padding: 4px 14px; font-size: 13px; font-weight: 600; }
+
+    .page-header {
+      text-align: center; padding: 48px 20px 30px;
+    }
+    .page-header h1 { font-size: 40px; font-weight: 800; }
+    .page-header h1 span { color: cyan; text-shadow: 0 0 12px cyan; }
+    .page-header p { color: #aacccc; margin-top: 10px; font-size: 16px; }
+
+    .form-wrapper {
+      max-width: 900px; margin: 0 auto 60px;
+      padding: 0 20px;
+    }
+
+    .form-card {
+      background: linear-gradient(135deg, #04202a, #002b36);
+      border: 1px solid #00ffff22; border-radius: 20px;
+      overflow: hidden;
+    }
+
+    .section-bar {
+      background: #003844; padding: 14px 28px;
+      font-size: 13px; font-weight: 700; letter-spacing: 2px;
+      color: cyan; text-shadow: 0 0 6px cyan;
+      border-bottom: 1px solid #00ffff22;
+    }
+
+    .fields {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 20px; padding: 28px;
+    }
+
+    .field label {
+      display: block; font-size: 13px; color: #aacccc;
+      margin-bottom: 7px; font-weight: 600;
+    }
+    .field label span { color: #ff6666; }
+
+    .field input, .field select {
+      width: 100%; background: #001822; color: white;
+      border: 1px solid #00ffff33; border-radius: 10px;
+      padding: 11px 14px; font-size: 15px;
+      outline: none; transition: border-color .2s, box-shadow .2s;
+    }
+    .field input:focus, .field select:focus {
+      border-color: cyan; box-shadow: 0 0 0 2px #00ffff22;
+    }
+    .field input::placeholder { color: #446655; }
+    select option { background: #001822; }
+
+    .submit-area {
+      padding: 24px 28px; border-top: 1px solid #00ffff11;
+      display: flex; gap: 14px; align-items: center; flex-wrap: wrap;
+    }
+
+    .btn-scan {
+      background: cyan; color: #0a0f1c;
+      padding: 14px 44px; border-radius: 50px;
+      font-size: 17px; font-weight: 800;
+      border: none; cursor: pointer;
+      box-shadow: 0 0 18px #00ffff88;
+      transition: transform .15s, box-shadow .2s;
+    }
+    .btn-scan:hover { transform: translateY(-2px); box-shadow: 0 0 32px cyan; }
+    .btn-scan:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .btn-clear {
+      background: transparent; color: #aacccc;
+      padding: 14px 28px; border-radius: 50px;
+      font-size: 15px; font-weight: 600;
+      border: 1px solid #334455; cursor: pointer;
+      transition: border-color .2s, color .2s;
+    }
+    .btn-clear:hover { border-color: cyan; color: cyan; }
+
+    .loading-msg {
+      font-size: 14px; color: cyan; display: none;
+      align-items: center; gap: 10px;
+    }
+    .spinner {
+      width: 18px; height: 18px; border: 2px solid #00ffff44;
+      border-top-color: cyan; border-radius: 50%;
+      animation: spin .6s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .error-bar {
+      background: #3a0000; border: 1px solid #ff4444;
+      color: #ff8888; border-radius: 10px;
+      padding: 12px 18px; margin: 0 28px 20px;
+      font-size: 14px; display: none;
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-brand" href="/">
+    <img src="/logo" alt="DiAlert Logo" />
+    <div class="nav-brand-text">Di<span>Alert</span></div>
+  </a>
+  <div class="nav-links">
+    <a href="/">Home</a>
+    <a href="/scan" class="active">Start Scan</a>
+  </div>
+  <div class="nav-badge">AI Powered</div>
+</nav>
+
+<div class="page-header">
+  <h1>Patient <span>Analysis</span></h1>
+  <p>Enter clinical biomarkers to run the DiAlert diabetes prediction model.</p>
+</div>
+
+<div class="form-wrapper">
+  <div class="form-card">
+
+    <div class="section-bar">PATIENT INFO</div>
+    <div class="fields">
+      <div class="field">
+        <label>Patient Name</label>
+        <input type="text" id="patient_name" placeholder="e.g. John Doe" />
+      </div>
+      <div class="field">
+        <label>Gender <span>*</span></label>
+        <select id="gender">
+          <option value="">Select gender</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Age (Years) <span>*</span></label>
+        <input type="number" id="age" placeholder="e.g. 45" min="1" max="120" />
+      </div>
+    </div>
+
+    <div class="section-bar">CLINICAL SIGNS</div>
+    <div class="fields">
+      <div class="field">
+        <label>Hypertension <span>*</span></label>
+        <select id="hypertension">
+          <option value="0">No</option>
+          <option value="1">Yes</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Heart Disease <span>*</span></label>
+        <select id="heart_disease">
+          <option value="0">No</option>
+          <option value="1">Yes</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Smoking History <span>*</span></label>
+        <select id="smoking_history">
+          <option value="never smoked">Never Smoked</option>
+          <option value="formerly smoked">Formerly Smoked</option>
+          <option value="smokes">Currently Smokes</option>
+          <option value="No Info">No Info</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="section-bar">BLOOD MARKERS</div>
+    <div class="fields">
+      <div class="field">
+        <label>BMI (kg/m²) <span>*</span></label>
+        <input type="number" id="bmi" placeholder="e.g. 27.5" step="0.1" min="10" max="80" />
+      </div>
+      <div class="field">
+        <label>HbA1c Level (%) <span>*</span></label>
+        <input type="number" id="hba1c" placeholder="e.g. 5.8" step="0.1" min="3" max="15" />
+      </div>
+      <div class="field">
+        <label>Blood Glucose (mg/dL) <span>*</span></label>
+        <input type="number" id="glucose" placeholder="e.g. 120" min="50" max="400" />
+      </div>
+    </div>
+
+    <div class="error-bar" id="errorBar"></div>
+
+    <div class="submit-area">
+      <button class="btn-scan" id="scanBtn" onclick="runScan()">🔬 Run Prediction</button>
+      <button class="btn-clear" onclick="clearForm()">Clear</button>
+      <div class="loading-msg" id="loadingMsg">
+        <div class="spinner"></div>
+        Analyzing patient data...
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  function showError(msg) {
+    const bar = document.getElementById('errorBar');
+    bar.textContent = msg;
+    bar.style.display = 'block';
+    setTimeout(() => bar.style.display = 'none', 5000);
+  }
+
+  function clearForm() {
+    ['patient_name','age','bmi','hba1c','glucose'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('gender').value = '';
+    document.getElementById('hypertension').value = '0';
+    document.getElementById('heart_disease').value = '0';
+    document.getElementById('smoking_history').value = 'never smoked';
+  }
+
+  async function runScan() {
+    const gender = document.getElementById('gender').value;
+    const age = parseFloat(document.getElementById('age').value);
+    const bmi = parseFloat(document.getElementById('bmi').value);
+    const hba1c = parseFloat(document.getElementById('hba1c').value);
+    const glucose = parseFloat(document.getElementById('glucose').value);
+
+    if (!gender) return showError('Please select a gender.');
+    if (isNaN(age) || age < 1) return showError('Please enter a valid age.');
+    if (isNaN(bmi) || bmi < 10) return showError('Please enter a valid BMI.');
+    if (isNaN(hba1c)) return showError('Please enter a valid HbA1c level.');
+    if (isNaN(glucose)) return showError('Please enter a valid blood glucose level.');
+
+    const payload = {
+      patient_name: document.getElementById('patient_name').value || 'Anonymous',
+      gender,
+      age,
+      hypertension: parseInt(document.getElementById('hypertension').value),
+      heart_disease: parseInt(document.getElementById('heart_disease').value),
+      smoking_history: document.getElementById('smoking_history').value,
+      bmi,
+      HbA1c_level: hba1c,
+      blood_glucose_level: glucose
+    };
+
+    document.getElementById('scanBtn').disabled = true;
+    document.getElementById('loadingMsg').style.display = 'flex';
+
+    try {
+      const res = await fetch('/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) throw new Error('API error ' + res.status);
+      await res.json();
+      window.location.href = '/result';
+    } catch (e) {
+      showError('Error: ' + e.message + '. Is the Flask server running?');
+      document.getElementById('scanBtn').disabled = false;
+      document.getElementById('loadingMsg').style.display = 'none';
+    }
+  }
+</script>
+
+</body>
+</html>

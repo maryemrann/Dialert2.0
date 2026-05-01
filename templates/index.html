@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DiAlert - Diabetes Risk Prediction</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #0a0f1c;
+      color: white;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── NAV ── */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 40px;
+      height: 64px;
+      background: #001a22;
+      border-bottom: 1px solid #00ffff22;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .nav-brand { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+    .nav-brand img { height: 40px; width: 40px; object-fit: contain; filter: drop-shadow(0 0 6px cyan); }
+    .nav-brand-text { font-size: 22px; font-weight: 700; color: white; }
+    .nav-brand-text span { color: cyan; }
+    .nav-links { display: flex; gap: 30px; }
+    .nav-links a { color: #aaa; text-decoration: none; font-size: 15px; transition: color .2s; }
+    .nav-links a:hover, .nav-links a.active { color: cyan; }
+    .nav-badge {
+      background: #003844; color: cyan; border: 1px solid cyan;
+      border-radius: 20px; padding: 4px 14px; font-size: 13px; font-weight: 600;
+      text-shadow: 0 0 6px cyan;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px 20px;
+      gap: 30px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at center, #00ffff0a 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-logo {
+      width: 110px; height: 110px;
+      filter: drop-shadow(0 0 20px cyan);
+      animation: pulse 3s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { filter: drop-shadow(0 0 14px cyan); }
+      50% { filter: drop-shadow(0 0 30px cyan); }
+    }
+
+    .hero h1 {
+      font-size: clamp(38px, 6vw, 72px);
+      font-weight: 800;
+      line-height: 1.1;
+    }
+    .hero h1 span { color: cyan; text-shadow: 0 0 18px cyan; }
+
+    .hero p {
+      font-size: 18px; color: #aacccc; max-width: 560px; line-height: 1.6;
+    }
+
+    .btn-row { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
+
+    .btn-primary {
+      background: cyan; color: #0a0f1c;
+      padding: 14px 36px; border-radius: 50px;
+      font-size: 17px; font-weight: 700;
+      text-decoration: none; border: none; cursor: pointer;
+      box-shadow: 0 0 20px #00ffff88;
+      transition: transform .15s, box-shadow .2s;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 35px cyan; }
+
+    .btn-secondary {
+      background: transparent; color: cyan;
+      padding: 14px 36px; border-radius: 50px;
+      font-size: 17px; font-weight: 700;
+      text-decoration: none; border: 2px solid cyan; cursor: pointer;
+      transition: background .2s, color .2s;
+    }
+    .btn-secondary:hover { background: #00ffff18; }
+
+    /* ── STATS ROW ── */
+    .stats {
+      display: flex; gap: 40px; flex-wrap: wrap; justify-content: center;
+      margin-top: 10px;
+    }
+    .stat { text-align: center; }
+    .stat-num { font-size: 32px; font-weight: 800; color: cyan; text-shadow: 0 0 10px cyan; }
+    .stat-lbl { font-size: 13px; color: #778899; margin-top: 4px; }
+
+    /* ── FEATURES ── */
+    .features {
+      display: flex; gap: 24px; flex-wrap: wrap; justify-content: center;
+      padding: 60px 40px;
+      background: #060b14;
+      border-top: 1px solid #00ffff11;
+    }
+    .feat-card {
+      background: linear-gradient(135deg, #04202a, #002b36);
+      border: 1px solid #00ffff22; border-radius: 18px;
+      padding: 32px 28px; max-width: 280px; text-align: center;
+      transition: box-shadow .3s, transform .2s;
+    }
+    .feat-card:hover { box-shadow: 0 0 28px #00ffff44; transform: translateY(-4px); }
+    .feat-icon { font-size: 42px; margin-bottom: 16px; }
+    .feat-card h3 { font-size: 19px; color: cyan; text-shadow: 0 0 8px cyan; margin-bottom: 10px; }
+    .feat-card p { font-size: 14px; color: #aacccc; line-height: 1.6; }
+
+    /* ── FOOTER ── */
+    footer {
+      text-align: center; padding: 20px;
+      background: #001a22; color: #445566; font-size: 13px;
+      border-top: 1px solid #00ffff11;
+    }
+    footer span { color: cyan; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-brand" href="/">
+    <img src="/logo" alt="DiAlert Logo" />
+    <div class="nav-brand-text">Di<span>Alert</span></div>
+  </a>
+  <div class="nav-links">
+    <a href="/" class="active">Home</a>
+    <a href="/scan">Start Scan</a>
+  </div>
+  <div class="nav-badge">AI Powered</div>
+</nav>
+
+<section class="hero">
+  <img src="/logo" alt="DiAlert" class="hero-logo" />
+
+  <h1>Di<span>Alert</span><br>Diabetes Predictor</h1>
+
+  <p>Advanced diabetes risk detection powered by Machine Learning. Enter patient biomarkers and get an instant, AI-driven risk assessment.</p>
+
+  <div class="btn-row">
+    <a href="/scan" class="btn-primary">🔬 Start Patient Scan</a>
+    <a href="#features" class="btn-secondary">Learn More</a>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="stat-num">95%+</div><div class="stat-lbl">Model Accuracy</div></div>
+    <div class="stat"><div class="stat-num">8</div><div class="stat-lbl">Biomarkers Analyzed</div></div>
+    <div class="stat"><div class="stat-num">Instant</div><div class="stat-lbl">Results</div></div>
+  </div>
+</section>
+
+<section class="features" id="features">
+  <div class="feat-card">
+    <div class="feat-icon">🤖</div>
+    <h3>ML Prediction</h3>
+    <p>Uses a trained machine learning model on clinical data to assess diabetes risk with high accuracy.</p>
+  </div>
+  <div class="feat-card">
+    <div class="feat-icon">🩺</div>
+    <h3>Clinical Biomarkers</h3>
+    <p>Analyzes BMI, HbA1c, blood glucose, hypertension, heart disease, smoking history and more.</p>
+  </div>
+  <div class="feat-card">
+    <div class="feat-icon">💾</div>
+    <h3>Patient Database</h3>
+    <p>Every scan is automatically saved to a local SQLite database for record keeping and history tracking.</p>
+  </div>
+  <div class="feat-card">
+    <div class="feat-icon">📋</div>
+    <h3>Recommendations</h3>
+    <p>Generates personalized health recommendations based on the patient's individual risk profile.</p>
+  </div>
+</section>
+
+<footer>
+  &copy; 2025 <span>DiAlert</span> — AI-Powered Diabetes Risk Assessment
+</footer>
+
+</body>
+</html>
