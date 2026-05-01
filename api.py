@@ -196,13 +196,6 @@ def history():
     conn.close()
     return jsonify(rows)
 
-import webbrowser
-from threading import Timer
-
 if __name__ == '__main__':
-    def open_browser():
-        webbrowser.open("http://127.0.0.1:5001/")
-    
-    # Open the browser slightly after starting the server
-    Timer(1.5, open_browser).start()
-    app.run(host='127.0.0.1', port=5001, debug=True, use_reloader=False)
+    port = int(os.environ.get("PORT", 5001))
+    app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
