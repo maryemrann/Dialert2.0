@@ -1,6 +1,6 @@
 {
   "patient_name": "Maryam",
-  "gender": "Male",
+  "gender": "Female",
   "age": 21,
   "hypertension": 0,
   "heart_disease": 0,
@@ -9,7 +9,7 @@
   "hba1c": 5.8,
   "glucose": 120,
   "prediction": 0,
-  "probability": 5.13,
+  "probability": 6.73,
   "risk_level": "Non-Diabetic",
   "recommendations": [
     "No diabetes detected. Keep up a healthy lifestyle!",
